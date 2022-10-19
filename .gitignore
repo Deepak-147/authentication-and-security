@@ -1,0 +1,6 @@
+level1/node_modules
+level1/.gitignore
+
+level2/node_modules
+level2/.gitignore
+level2/.env
