@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
 /***
  * Level 2 encryption: Storing encrypted password in DB
  */
-userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] } );
+userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
 /**
  * create a MODEL. A model is a class with which we construct documents. In this case, each document will be a post with properties(and behaviors) as declared in our schema.
