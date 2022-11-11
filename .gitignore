@@ -1,12 +1,12 @@
 level1/node_modules
-level1/.gitignore
 level1/package-lock.json
 
 level2/node_modules
-level2/.gitignore
 level2/.env
 level2/package-lock.json
 
 level3/node_modules
-level3/.gitignore
 level3/package-lock.json
+
+level4/node_modules
+level4/package-lock.json

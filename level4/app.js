@@ -3,7 +3,9 @@ const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const md5 = require("md5");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -56,34 +58,38 @@ app.get("/register", (req, res) => {
 });
 
 /***
- * Level 3 Hashing: Hash the password and then store this hash value as password. Its irreversible process. A secret can be hashed using a hash function, but given a hashed value we cannot obtain the secret. Technically we can get, but it would take a lot of computation and time for even modern machines.
+ * Level 4 Salting and Hashing with bcrypt: An attacker can generate the hash table with sophisticated machines and can lookup your password in the hash table and gain access. To counter this, we can add a salt (some extra strings) to our password and then hash it and store it on database.
  */
 app.post("/register", (req, res) => {
-    const newUser = new User({
-        email: req.body.username,
-        password: md5(req.body.password) 
-    });
-
-    newUser.save((err) => {
-        if (!err) {
-            res.render("secrets");
-        }
-        else {
-            res.send(err);
-        }
+    bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+        const newUser = new User({
+            email: req.body.username,
+            password: hash
+        });
+    
+        newUser.save((err) => {
+            if (!err) {
+                res.render("secrets");
+            }
+            else {
+                res.send(err);
+            }
+        });
     });
 });
 
 app.post("/login", (req, res) => {
     const username = req.body.username;
-    const password = md5(req.body.password); // Hash the password given by the user and compare it with the stored hash value
+    const password = req.body.password;
 
     User.findOne({email: username}, (err, foundUser) => {
         if (!err) {
             if (foundUser) {
-                if (foundUser.password === password) {
-                    res.render("secrets");
-                }
+                bcrypt.compare(password, foundUser.password, function(err, result) {
+                    if (result == true) {
+                        res.render("secrets");
+                    }
+                });
             }
         }
         else {
