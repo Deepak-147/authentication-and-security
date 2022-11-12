@@ -49,32 +49,28 @@ async function main() {
 const userSchema = new mongoose.Schema({
     email: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secret: Array
 });
 
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
+
 /**
  * create a MODEL. A model is a class with which we construct documents. In this case, each document will be a post with properties(and behaviors) as declared in our schema.
  */
 const User = mongoose.model("User", userSchema);
 
-// passport.serializeUser(function(user, done) {
-//     done(null, user.id);
-// });
- 
-// passport.deserializeUser(function(id, done) {
-//     User.findById(id, function(err, user) {
-//         done(err, user);
-//     });
-// });
+passport.use(User.createStrategy());
 
 passport.serializeUser(function(user, done) {
-    done(null, user);
+    done(null, user.id);
 });
-   
-passport.deserializeUser(function(user, done) {
-    done(null, user);
+
+passport.deserializeUser(function(id, done) {
+    User.findById(id, function(err, user) {
+        done(err, user);
+    });
 });
 
 passport.use(new GoogleStrategy({
@@ -119,8 +115,22 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/secrets", (req, res) => {
+    // Check if secret is not equal to null
+    User.find({"secret": {$ne: null}}, function(err, foundUsers) {
+        if (!err) {
+            if (foundUsers) {
+                res.render("secrets", { usersWithSecrets: foundUsers });
+            }
+        }
+        else {
+            console.log(err);
+        }
+    });
+});
+
+app.get("/submit", (req, res) => {
     if (req.isAuthenticated()) {
-        res.render("secrets");
+        res.render("submit");
     }
     else {
         res.redirect("/login");
@@ -135,7 +145,6 @@ app.get("/logout", (req, res) => {
     });
     res.redirect("/");
 });
-
 
 /***
  * Level 6: Using OAuth and passport
@@ -170,4 +179,21 @@ app.post("/login", (req, res) => {
             console.log(err);
         }
     })
+});
+
+app.post("/submit", (req, res) => {
+    const submittedSecret = req.body.secret;
+    User.findById(req.user.id, function(err, foundUser) {
+        if (!err) {
+            if (foundUser) {
+                foundUser.secret.push(submittedSecret);
+                foundUser.save(function() {
+                    res.redirect("/secrets");
+                });
+            }
+        }
+        else {
+            console.log(err);
+        }
+    });
 });
