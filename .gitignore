@@ -10,3 +10,7 @@ level3/package-lock.json
 
 level4/node_modules
 level4/package-lock.json
+
+level5/node_modules
+level5/.env
+level5/package-lock.json
